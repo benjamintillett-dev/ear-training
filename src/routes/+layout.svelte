@@ -3,9 +3,20 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import { page } from '$app/stores';
 	import { fade } from 'svelte/transition';
+	import { onMount } from 'svelte';
 	import SoundDrawer from '$lib/components/SoundDrawer.svelte';
 
 	let { children } = $props();
+
+	onMount(() => {
+		const requestFullscreen = () => {
+			document.documentElement.requestFullscreen?.().catch(() => {});
+			document.removeEventListener('click', requestFullscreen);
+		};
+		// Fullscreen must be triggered by a user gesture; attach to first click
+		document.addEventListener('click', requestFullscreen);
+		return () => document.removeEventListener('click', requestFullscreen);
+	});
 </script>
 
 <svelte:head>

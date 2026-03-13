@@ -52,7 +52,7 @@
 		<ToggleGrid
 			label="Intervals"
 			items={ALL_INTERVALS.map((i) => ({
-				shortName: i.shortName,
+				shortName: i.semitones === 0 ? 'U' : i.semitones === 12 ? 'O' : i.shortName,
 				selected: game.config.intervals.some((x) => x.semitones === i.semitones),
 				onToggle: () => game.toggleInterval(i.semitones),
 			}))}
