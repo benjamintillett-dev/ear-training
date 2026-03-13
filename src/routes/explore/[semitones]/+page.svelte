@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { playInterval, playNoteSequence, preloadSampler, stopAll } from '$lib/audio.js';
+	import { playInterval, playIntervalHarmonic, playNoteSequence, preloadSampler, stopAll } from '$lib/audio.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, Volume2 } from 'lucide-svelte';
+	import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, Volume2, Layers2 } from 'lucide-svelte';
 	import type { Direction } from '$lib/game.svelte.js';
 
 	let { data } = $props();
@@ -197,6 +197,7 @@
 		{ value: 'up', label: 'Ascending', icon: ArrowUp },
 		{ value: 'down', label: 'Descending', icon: ArrowDown },
 		{ value: 'both', label: 'Both', icon: ArrowUpDown },
+		{ value: 'harmonic', label: 'Harmonic', icon: Layers2 },
 	];
 
 	onMount(async () => {
@@ -213,6 +214,9 @@
 			await new Promise((r) => setTimeout(r, 1800));
 			await playInterval(interval.semitones, 'down');
 			await new Promise((r) => setTimeout(r, 1800));
+		} else if (direction === 'harmonic') {
+			await playIntervalHarmonic(interval.semitones);
+			await new Promise((r) => setTimeout(r, 2500));
 		} else {
 			await playInterval(interval.semitones, direction);
 			await new Promise((r) => setTimeout(r, 1800));

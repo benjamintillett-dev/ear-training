@@ -4,6 +4,7 @@
 	import { game } from '$lib/game.svelte.js';
 	import { playInterval, preloadSampler, stopAll } from '$lib/audio.js';
 	import { Check, X, Volume2, ArrowUp, ArrowDown } from 'lucide-svelte';
+	import HomeButton from '$lib/components/HomeButton.svelte';
 	import { fade } from 'svelte/transition';
 
 	$effect(() => {
@@ -11,17 +12,20 @@
 	});
 
 	const round = $derived(game.rounds[game.currentRound]);
-	const answered = $derived(round?.answer !== null);
+	const answered = $derived(round != null && round.answer !== null);
 
 	let isPlaying = $state(false);
 	let isLoading = $state(true);
+	let playId = 0;
 
 	async function play() {
-		if (!round || isPlaying) return;
+		if (!round) return;
+		const id = ++playId;
 		isPlaying = true;
-		await playInterval(round.interval.semitones, round.direction);
+		const semitones = round.question.type === 'interval' ? round.question.interval.semitones : 0;
+		await playInterval(semitones, round.direction);
 		await new Promise((r) => setTimeout(r, 1800));
-		isPlaying = false;
+		if (playId === id) isPlaying = false;
 	}
 
 	onMount(async () => {
@@ -34,21 +38,28 @@
 
 	function selectAnswer(semitones: number) {
 		if (answered) return;
-		game.submitAnswer(semitones);
+		game.submitAnswer(String(semitones));
 		setTimeout(() => {
 			game.nextRound();
 			if (game.phase === 'results') goto('/results');
-			else play();
+			else {
+				stopAll();
+				play();
+			}
 		}, 700);
 	}
 
 	function getState(semitones: number): 'correct' | 'wrong' | 'neutral' {
 		if (!answered) return 'neutral';
-		if (semitones === round.interval.semitones) return 'correct';
-		if (semitones === round.answer) return 'wrong';
+		const key = String(semitones);
+		const correctKey = round.question.type === 'interval' ? String(round.question.interval.semitones) : '';
+		if (key === correctKey) return 'correct';
+		if (key === round.answer) return 'wrong';
 		return 'neutral';
 	}
 </script>
+
+<HomeButton />
 
 <div class="flex min-h-screen flex-col items-center justify-center gap-8 p-6">
 

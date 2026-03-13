@@ -1,7 +1,14 @@
-export type Direction = 'up' | 'down' | 'both';
+export type Direction = 'up' | 'down' | 'both' | 'harmonic';
 
 export interface Interval {
 	semitones: number;
+	name: string;
+	shortName: string;
+}
+
+export interface Triad {
+	id: string;
+	semitones: number[]; // offsets from root (C4 = 0)
 	name: string;
 	shortName: string;
 }
@@ -21,16 +28,29 @@ export const ALL_INTERVALS: Interval[] = [
 	{ semitones: 12, name: 'Octave', shortName: 'P8' },
 ];
 
+export const ALL_TRIADS: Triad[] = [
+	{ id: 'major',     semitones: [0, 4, 7],  name: 'Major',      shortName: 'Maj' },
+	{ id: 'minor',     semitones: [0, 3, 7],  name: 'Minor',      shortName: 'Min' },
+	{ id: 'augmented', semitones: [0, 4, 8],  name: 'Augmented',  shortName: 'Aug' },
+	{ id: 'diminished',semitones: [0, 3, 6],  name: 'Diminished', shortName: 'Dim' },
+];
+
+export type RoundQuestion =
+	| { type: 'interval'; interval: Interval }
+	| { type: 'triad'; triad: Triad };
+
 export interface Round {
-	interval: Interval;
+	question: RoundQuestion;
 	direction: 'up' | 'down';
-	answer: number | null; // semitones of the chosen answer
+	answer: string | null; // interval: semitones.toString(), triad: triad.id
 	correct: boolean | null;
 }
 
 export interface GameConfig {
+	mode: 'melody' | 'harmony';
 	direction: Direction;
 	intervals: Interval[];
+	triads: Triad[];
 }
 
 export interface GameState {
@@ -42,35 +62,58 @@ export interface GameState {
 
 function createGameStore() {
 	let config = $state<GameConfig>({
+		mode: 'melody',
 		direction: 'up',
 		intervals: ALL_INTERVALS.slice(0, 4),
+		triads: [],
 	});
 
 	let rounds = $state<Round[]>([]);
 	let currentRound = $state(0);
 	let phase = $state<'config' | 'playing' | 'results'>('config');
 
-	function startGame() {
+	function startGame(mode: 'melody' | 'harmony') {
+		config = { ...config, mode };
 		const generated: Round[] = [];
+
 		for (let i = 0; i < 10; i++) {
-			const interval = config.intervals[Math.floor(Math.random() * config.intervals.length)];
+			let question: RoundQuestion;
+
+			if (mode === 'harmony' && config.triads.length > 0) {
+				// Pick randomly from the combined pool of intervals and triads
+				const pool = [
+					...config.intervals.map(interval => ({ type: 'interval' as const, interval })),
+					...config.triads.map(triad => ({ type: 'triad' as const, triad })),
+				];
+				question = pool[Math.floor(Math.random() * pool.length)];
+			} else {
+				const interval = config.intervals[Math.floor(Math.random() * config.intervals.length)];
+				question = { type: 'interval', interval };
+			}
+
 			let direction: 'up' | 'down';
-			if (config.direction === 'both') {
+			if (mode === 'harmony' || config.direction === 'both') {
 				direction = Math.random() < 0.5 ? 'up' : 'down';
 			} else {
-				direction = config.direction;
+				direction = config.direction as 'up' | 'down';
 			}
-			generated.push({ interval, direction, answer: null, correct: null });
+
+			generated.push({ question, direction, answer: null, correct: null });
 		}
+
 		rounds = generated;
 		currentRound = 0;
 		phase = 'playing';
 	}
 
-	function submitAnswer(semitones: number) {
+	function submitAnswer(key: string) {
 		const round = rounds[currentRound];
-		round.answer = semitones;
-		round.correct = semitones === round.interval.semitones;
+		round.answer = key;
+		if (round.question.type === 'interval') {
+			round.correct = key === String(round.question.interval.semitones);
+		} else {
+			round.correct = key === round.question.triad.id;
+		}
 		rounds = [...rounds];
 	}
 

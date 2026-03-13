@@ -98,6 +98,27 @@ export async function playInterval(semitones: number, direction: 'up' | 'down') 
 	s.triggerAttackRelease(second, '2n', now + 0.75);
 }
 
+export async function playTriad(semitones: number[]) {
+	const Tone = await import('tone');
+	const s = await getSampler();
+	const now = Tone.now();
+	for (const offset of semitones) {
+		s.triggerAttackRelease(midiToNoteName(offset), '1n', now);
+	}
+}
+
+export async function playIntervalHarmonic(semitones: number) {
+	const Tone = await import('tone');
+	const s = await getSampler();
+
+	const middleC = midiToNoteName(0);
+	const otherNote = midiToNoteName(semitones);
+
+	const now = Tone.now();
+	s.triggerAttackRelease(middleC, '1n', now);
+	s.triggerAttackRelease(otherNote, '1n', now);
+}
+
 export function stopAll() {
 	if (sampler && samplerReady) sampler.releaseAll();
 }

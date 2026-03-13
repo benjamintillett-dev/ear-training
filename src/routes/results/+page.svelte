@@ -2,13 +2,15 @@
 	import { goto } from '$app/navigation';
 	import { game } from '$lib/game.svelte.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { RotateCcw } from 'lucide-svelte';
+	import { RotateCcw, Settings, Home } from 'lucide-svelte';
+	import HomeButton from '$lib/components/HomeButton.svelte';
 
 	$effect(() => {
 		if (game.phase === 'config') goto('/');
 	});
 
 	const score = $derived(game.getScore());
+	const mode = $derived(game.config.mode);
 
 	function getMessage(s: number) {
 		if (s === 10) return 'Perfect!';
@@ -17,6 +19,8 @@
 		return 'Keep practicing!';
 	}
 </script>
+
+<HomeButton />
 
 <div class="flex min-h-screen flex-col items-center justify-center gap-8 p-6">
 
@@ -28,13 +32,21 @@
 		<p class="text-sm text-muted-foreground">{getMessage(score)}</p>
 	</div>
 
-	<div class="flex flex-col gap-4 w-full max-w-sm">
-		<Button class="w-full" size="lg" onclick={() => { game.startGame(); goto('/practice'); }}>
+	<div class="flex flex-col gap-3 w-full max-w-sm">
+		<Button class="w-full" size="lg" onclick={() => {
+			game.startGame(mode);
+			goto(mode === 'harmony' ? '/harmony/play' : '/melody/play');
+		}}>
 			<RotateCcw class="size-4" />
-			Practice Again
+			Try Again
+		</Button>
+		<Button variant="secondary" class="w-full" size="lg" onclick={() => goto(mode === 'harmony' ? '/harmony' : '/melody')}>
+			<Settings class="size-4" />
+			Back to Settings
 		</Button>
 		<Button variant="ghost" class="w-full" size="lg" onclick={() => { game.reset(); goto('/'); }}>
-			Change Settings
+			<Home class="size-4" />
+			Home
 		</Button>
 	</div>
 
