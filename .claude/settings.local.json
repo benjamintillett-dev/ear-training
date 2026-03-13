@@ -3,7 +3,9 @@
     "allow": [
       "WebFetch(domain:tonejs.github.io)",
       "WebFetch(domain:www.shadcn-svelte.com)",
-      "WebFetch(domain:kit.svelte.dev)"
+      "WebFetch(domain:kit.svelte.dev)",
+      "Bash(git add:*)",
+      "Bash(git push:*)"
     ]
   }
 }

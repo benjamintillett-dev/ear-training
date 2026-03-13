@@ -18,14 +18,16 @@
 	let isPlaying = $state(false);
 	let isLoading = $state(true);
 	let playId = 0;
+	let destroyed = false;
+	let timers: ReturnType<typeof setTimeout>[] = [];
 
 	async function play() {
-		if (!round || round.question.type !== 'interval') return;
+		if (!round || round.question.type !== 'interval' || destroyed) return;
 		const id = ++playId;
 		isPlaying = true;
 		await playInterval(round.question.interval.semitones, round.direction);
-		await new Promise((r) => setTimeout(r, 1800));
-		if (playId === id) isPlaying = false;
+		await new Promise<void>((r) => { timers.push(setTimeout(r, 1800)); });
+		if (playId === id && !destroyed) isPlaying = false;
 	}
 
 	onMount(async () => {
@@ -34,19 +36,21 @@
 		play();
 	});
 
-	onDestroy(() => stopAll());
+	onDestroy(() => {
+		destroyed = true;
+		stopAll();
+		timers.forEach(clearTimeout);
+	});
 
 	function selectAnswer(semitones: number) {
-		if (answered) return;
+		if (answered || destroyed) return;
 		game.submitAnswer(String(semitones));
-		setTimeout(() => {
+		timers.push(setTimeout(() => {
+			if (destroyed) return;
 			game.nextRound();
 			if (game.phase === 'results') goto('/results');
-			else {
-				stopAll();
-				play();
-			}
-		}, 700);
+			else { stopAll(); play(); }
+		}, 700));
 	}
 
 	function getState(semitones: number): 'correct' | 'wrong' | 'neutral' {

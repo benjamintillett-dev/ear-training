@@ -73,7 +73,7 @@ function createGameStore() {
 	let config = $state<GameConfig>({
 		mode: 'interval',
 		direction: 'up',
-		intervals: ALL_INTERVALS.slice(0, 4),
+		intervals: ALL_INTERVALS.filter((i) => [0, 2, 4, 5, 7, 9, 11, 12].includes(i.semitones)),
 		triads: [],
 		seventhChords: [],
 		shellSeventhChords: [],

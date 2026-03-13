@@ -18,9 +18,11 @@
 	let isPlaying = $state(false);
 	let isLoading = $state(true);
 	let playId = 0;
+	let destroyed = false;
+	let timers: ReturnType<typeof setTimeout>[] = [];
 
 	async function play() {
-		if (!round) return;
+		if (!round || destroyed) return;
 		const id = ++playId;
 		isPlaying = true;
 		if (round.question.type === 'interval') {
@@ -28,8 +30,8 @@
 		} else {
 			await playTriad(round.question.chord.semitones);
 		}
-		await new Promise((r) => setTimeout(r, 2500));
-		if (playId === id) isPlaying = false;
+		await new Promise<void>((r) => { timers.push(setTimeout(r, 2500)); });
+		if (playId === id && !destroyed) isPlaying = false;
 	}
 
 	onMount(async () => {
@@ -38,19 +40,21 @@
 		play();
 	});
 
-	onDestroy(() => stopAll());
+	onDestroy(() => {
+		destroyed = true;
+		stopAll();
+		timers.forEach(clearTimeout);
+	});
 
 	function selectAnswer(key: string) {
-		if (answered) return;
+		if (answered || destroyed) return;
 		game.submitAnswer(key);
-		setTimeout(() => {
+		timers.push(setTimeout(() => {
+			if (destroyed) return;
 			game.nextRound();
 			if (game.phase === 'results') goto('/results');
-			else {
-				stopAll();
-				play();
-			}
-		}, 700);
+			else { stopAll(); play(); }
+		}, 700));
 	}
 
 	function getState(key: string): 'correct' | 'wrong' | 'neutral' {

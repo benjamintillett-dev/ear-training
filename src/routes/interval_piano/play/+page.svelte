@@ -3,7 +3,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { game } from '$lib/game.svelte.js';
 	import { playInterval, preloadSampler, stopAll } from '$lib/audio.js';
-	import { Volume2, ArrowUp, ArrowDown } from 'lucide-svelte';
+	import { Volume2 } from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
 	import HomeButton from '$lib/components/HomeButton.svelte';
 	import PianoKeyboard from '$lib/components/PianoKeyboard.svelte';
@@ -18,14 +18,16 @@
 	let isPlaying = $state(false);
 	let isLoading = $state(true);
 	let playId = 0;
+	let destroyed = false;
+	let timers: ReturnType<typeof setTimeout>[] = [];
 
 	async function play() {
-		if (!round || round.question.type !== 'interval') return;
+		if (!round || round.question.type !== 'interval' || destroyed) return;
 		const id = ++playId;
 		isPlaying = true;
 		await playInterval(round.question.interval.semitones, round.direction);
-		await new Promise((r) => setTimeout(r, 1800));
-		if (playId === id) isPlaying = false;
+		await new Promise<void>((r) => { timers.push(setTimeout(r, 1800)); });
+		if (playId === id && !destroyed) isPlaying = false;
 	}
 
 	onMount(async () => {
@@ -34,19 +36,21 @@
 		play();
 	});
 
-	onDestroy(() => stopAll());
+	onDestroy(() => {
+		destroyed = true;
+		stopAll();
+		timers.forEach(clearTimeout);
+	});
 
 	function selectAnswer(semitones: number) {
-		if (answered) return;
+		if (answered || destroyed) return;
 		game.submitAnswer(String(semitones));
-		setTimeout(() => {
+		timers.push(setTimeout(() => {
+			if (destroyed) return;
 			game.nextRound();
 			if (game.phase === 'results') goto('/results');
-			else {
-				stopAll();
-				play();
-			}
-		}, 700);
+			else { stopAll(); play(); }
+		}, 700));
 	}
 
 	function getState(semitones: number): 'correct' | 'wrong' | 'neutral' {
@@ -85,34 +89,6 @@
 			class="flex flex-col items-center gap-8 w-full"
 			in:fade={{ duration: 200, delay: 50 }}
 		>
-			<!-- Play button -->
-			<div class="flex flex-col items-center gap-3">
-				<div class="flex items-center gap-1.5 text-muted-foreground text-xs">
-					{#if round?.direction === 'up'}
-						<ArrowUp class="size-3" />
-						<span>Ascending</span>
-					{:else}
-						<ArrowDown class="size-3" />
-						<span>Descending</span>
-					{/if}
-				</div>
-
-				<button
-					onclick={play}
-					disabled={isPlaying || isLoading}
-					class="size-28 rounded-full border-2 flex items-center justify-center transition-all
-						{isPlaying
-							? 'border-primary bg-primary text-primary-foreground'
-							: 'border-border bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed'}"
-				>
-					<Volume2 class="size-10" />
-				</button>
-
-				<span class="text-xs text-muted-foreground">
-					{isLoading ? 'Loading…' : isPlaying ? 'Playing…' : 'Tap to replay'}
-				</span>
-			</div>
-
 			<!-- Piano keyboard — full width on mobile -->
 			<div class="w-full md:max-w-2xl">
 				<PianoKeyboard
@@ -122,6 +98,18 @@
 					onSelect={selectAnswer}
 				/>
 			</div>
+
+			<!-- Play button -->
+			<button
+				onclick={play}
+				disabled={isPlaying || isLoading}
+				class="size-20 rounded-full border-2 flex items-center justify-center transition-all
+					{isPlaying
+						? 'border-primary bg-primary text-primary-foreground'
+						: 'border-border bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed'}"
+			>
+				<Volume2 class="size-8" />
+			</button>
 		</div>
 	{/key}
 
