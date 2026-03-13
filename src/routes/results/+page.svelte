@@ -35,12 +35,12 @@
 	<div class="flex flex-col gap-3 w-full max-w-sm">
 		<Button class="w-full" size="lg" onclick={() => {
 			game.startGame(mode);
-			goto(mode === 'harmony' ? '/harmony/play' : '/melody/play');
+			goto(mode === 'harmony' ? '/harmony/play' : mode === 'interval_piano' ? '/interval_piano/play' : '/interval/play');
 		}}>
 			<RotateCcw class="size-4" />
 			Try Again
 		</Button>
-		<Button variant="secondary" class="w-full" size="lg" onclick={() => goto(mode === 'harmony' ? '/harmony' : '/melody')}>
+		<Button variant="secondary" class="w-full" size="lg" onclick={() => goto(mode === 'harmony' ? '/harmony' : mode === 'interval_piano' ? '/interval_piano' : '/interval')}>
 			<Settings class="size-4" />
 			Back to Settings
 		</Button>

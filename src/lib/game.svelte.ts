@@ -14,6 +14,7 @@ export interface Chord {
 }
 
 export const ALL_INTERVALS: Interval[] = [
+	{ semitones: 0, name: 'Perfect Unison', shortName: 'P1' },
 	{ semitones: 1, name: 'Minor 2nd', shortName: 'm2' },
 	{ semitones: 2, name: 'Major 2nd', shortName: 'M2' },
 	{ semitones: 3, name: 'Minor 3rd', shortName: 'm3' },
@@ -60,7 +61,7 @@ export interface Round {
 }
 
 export interface GameConfig {
-	mode: 'melody' | 'harmony';
+	mode: 'interval' | 'interval_piano' | 'harmony';
 	direction: Direction;
 	intervals: Interval[];
 	triads: Chord[];
@@ -70,7 +71,7 @@ export interface GameConfig {
 
 function createGameStore() {
 	let config = $state<GameConfig>({
-		mode: 'melody',
+		mode: 'interval',
 		direction: 'up',
 		intervals: ALL_INTERVALS.slice(0, 4),
 		triads: [],
@@ -82,7 +83,7 @@ function createGameStore() {
 	let currentRound = $state(0);
 	let phase = $state<'config' | 'playing' | 'results'>('config');
 
-	function startGame(mode: 'melody' | 'harmony') {
+	function startGame(mode: 'interval' | 'interval_piano' | 'harmony') {
 		config = { ...config, mode };
 		const generated: Round[] = [];
 
