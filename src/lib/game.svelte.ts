@@ -6,7 +6,7 @@ export interface Interval {
 	shortName: string;
 }
 
-export interface Triad {
+export interface Chord {
 	id: string;
 	semitones: number[]; // offsets from root (C4 = 0)
 	name: string;
@@ -28,27 +28,34 @@ export const ALL_INTERVALS: Interval[] = [
 	{ semitones: 12, name: 'Octave', shortName: 'P8' },
 ];
 
-export const ALL_TRIADS: Triad[] = [
-	{ id: 'major',     semitones: [0, 4, 7],  name: 'Major',      shortName: 'Maj' },
-	{ id: 'minor',     semitones: [0, 3, 7],  name: 'Minor',      shortName: 'Min' },
-	{ id: 'augmented', semitones: [0, 4, 8],  name: 'Augmented',  shortName: 'Aug' },
-	{ id: 'diminished',semitones: [0, 3, 6],  name: 'Diminished', shortName: 'Dim' },
+export const ALL_TRIADS: Chord[] = [
+	{ id: 'major',      semitones: [0, 4, 7], name: 'Major',      shortName: 'Maj' },
+	{ id: 'minor',      semitones: [0, 3, 7], name: 'Minor',      shortName: 'Min' },
+	{ id: 'augmented',  semitones: [0, 4, 8], name: 'Augmented',  shortName: 'Aug' },
+	{ id: 'diminished', semitones: [0, 3, 6], name: 'Diminished', shortName: 'Dim' },
 ];
 
-export const ALL_SEVENTH_CHORDS: Triad[] = [
-	{ id: 'major7',   semitones: [0, 4, 7, 11], name: 'Major 7',    shortName: 'Maj7' },
-	{ id: 'dominant7',semitones: [0, 4, 7, 10], name: 'Dominant 7', shortName: 'Dom7' },
-	{ id: 'minor7',   semitones: [0, 3, 7, 10], name: 'Minor 7',    shortName: 'Min7' },
+export const ALL_SEVENTH_CHORDS: Chord[] = [
+	{ id: 'major7',    semitones: [0, 4, 7, 11], name: 'Major 7',    shortName: 'Maj7' },
+	{ id: 'dominant7', semitones: [0, 4, 7, 10], name: 'Dominant 7', shortName: 'Dom7' },
+	{ id: 'minor7',    semitones: [0, 3, 7, 10], name: 'Minor 7',    shortName: 'Min7' },
+];
+
+// Shell voicings: root + 3rd + 7th (no 5th)
+export const ALL_SHELL_SEVENTH_CHORDS: Chord[] = [
+	{ id: 'shell_major7',    semitones: [0, 4, 11], name: 'Major 7 Shell',    shortName: 'Maj7s' },
+	{ id: 'shell_dominant7', semitones: [0, 4, 10], name: 'Dominant 7 Shell', shortName: 'Dom7s' },
+	{ id: 'shell_minor7',    semitones: [0, 3, 10], name: 'Minor 7 Shell',    shortName: 'Min7s' },
 ];
 
 export type RoundQuestion =
 	| { type: 'interval'; interval: Interval }
-	| { type: 'triad'; triad: Triad };
+	| { type: 'chord'; chord: Chord };
 
 export interface Round {
 	question: RoundQuestion;
 	direction: 'up' | 'down';
-	answer: string | null; // interval: semitones.toString(), triad: triad.id
+	answer: string | null; // interval: semitones.toString(), chord: chord.id
 	correct: boolean | null;
 }
 
@@ -56,15 +63,9 @@ export interface GameConfig {
 	mode: 'melody' | 'harmony';
 	direction: Direction;
 	intervals: Interval[];
-	triads: Triad[];
-	seventhChords: Triad[];
-}
-
-export interface GameState {
-	config: GameConfig;
-	rounds: Round[];
-	currentRound: number;
-	phase: 'config' | 'playing' | 'results';
+	triads: Chord[];
+	seventhChords: Chord[];
+	shellSeventhChords: Chord[];
 }
 
 function createGameStore() {
@@ -74,6 +75,7 @@ function createGameStore() {
 		intervals: ALL_INTERVALS.slice(0, 4),
 		triads: [],
 		seventhChords: [],
+		shellSeventhChords: [],
 	});
 
 	let rounds = $state<Round[]>([]);
@@ -87,11 +89,12 @@ function createGameStore() {
 		for (let i = 0; i < 10; i++) {
 			let question: RoundQuestion;
 
-			if (mode === 'harmony' && (config.triads.length > 0 || config.seventhChords.length > 0)) {
+			if (mode === 'harmony' && (config.triads.length > 0 || config.seventhChords.length > 0 || config.shellSeventhChords.length > 0)) {
 				const pool = [
-					...config.intervals.map(interval => ({ type: 'interval' as const, interval })),
-					...config.triads.map(triad => ({ type: 'triad' as const, triad })),
-					...config.seventhChords.map(triad => ({ type: 'triad' as const, triad })),
+					...config.intervals.map((interval) => ({ type: 'interval' as const, interval })),
+					...config.triads.map((chord) => ({ type: 'chord' as const, chord })),
+					...config.seventhChords.map((chord) => ({ type: 'chord' as const, chord })),
+					...config.shellSeventhChords.map((chord) => ({ type: 'chord' as const, chord })),
 				];
 				question = pool[Math.floor(Math.random() * pool.length)];
 			} else {
@@ -117,11 +120,9 @@ function createGameStore() {
 	function submitAnswer(key: string) {
 		const round = rounds[currentRound];
 		round.answer = key;
-		if (round.question.type === 'interval') {
-			round.correct = key === String(round.question.interval.semitones);
-		} else {
-			round.correct = key === round.question.triad.id;
-		}
+		round.correct = round.question.type === 'interval'
+			? key === String(round.question.interval.semitones)
+			: key === round.question.chord.id;
 		rounds = [...rounds];
 	}
 
@@ -143,6 +144,50 @@ function createGameStore() {
 		return rounds.filter((r) => r.correct).length;
 	}
 
+	function toggleInterval(semitones: number) {
+		const interval = ALL_INTERVALS.find((i) => i.semitones === semitones)!;
+		const exists = config.intervals.some((i) => i.semitones === semitones);
+		config = {
+			...config,
+			intervals: exists
+				? config.intervals.filter((i) => i.semitones !== semitones)
+				: [...config.intervals, interval].sort((a, b) => a.semitones - b.semitones),
+		};
+	}
+
+	function toggleTriad(id: string) {
+		const chord = ALL_TRIADS.find((t) => t.id === id)!;
+		const exists = config.triads.some((t) => t.id === id);
+		config = {
+			...config,
+			triads: exists
+				? config.triads.filter((t) => t.id !== id)
+				: [...config.triads, chord],
+		};
+	}
+
+	function toggleSeventhChord(id: string) {
+		const chord = ALL_SEVENTH_CHORDS.find((c) => c.id === id)!;
+		const exists = config.seventhChords.some((c) => c.id === id);
+		config = {
+			...config,
+			seventhChords: exists
+				? config.seventhChords.filter((c) => c.id !== id)
+				: [...config.seventhChords, chord],
+		};
+	}
+
+	function toggleShellSeventhChord(id: string) {
+		const chord = ALL_SHELL_SEVENTH_CHORDS.find((c) => c.id === id)!;
+		const exists = config.shellSeventhChords.some((c) => c.id === id);
+		config = {
+			...config,
+			shellSeventhChords: exists
+				? config.shellSeventhChords.filter((c) => c.id !== id)
+				: [...config.shellSeventhChords, chord],
+		};
+	}
+
 	return {
 		get config() { return config; },
 		get rounds() { return rounds; },
@@ -156,6 +201,10 @@ function createGameStore() {
 		setConfig(c: Partial<GameConfig>) {
 			config = { ...config, ...c };
 		},
+		toggleInterval,
+		toggleTriad,
+		toggleSeventhChord,
+		toggleShellSeventhChord,
 	};
 }
 

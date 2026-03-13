@@ -3,9 +3,10 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { game } from '$lib/game.svelte.js';
 	import { playInterval, preloadSampler, stopAll } from '$lib/audio.js';
-	import { Check, X, Volume2, ArrowUp, ArrowDown } from 'lucide-svelte';
-	import HomeButton from '$lib/components/HomeButton.svelte';
+	import { Volume2, ArrowUp, ArrowDown } from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
+	import HomeButton from '$lib/components/HomeButton.svelte';
+	import AnswerButton from '$lib/components/AnswerButton.svelte';
 
 	$effect(() => {
 		if (game.phase === 'config') goto('/');
@@ -19,11 +20,10 @@
 	let playId = 0;
 
 	async function play() {
-		if (!round) return;
+		if (!round || round.question.type !== 'interval') return;
 		const id = ++playId;
 		isPlaying = true;
-		const semitones = round.question.type === 'interval' ? round.question.interval.semitones : 0;
-		await playInterval(semitones, round.direction);
+		await playInterval(round.question.interval.semitones, round.direction);
 		await new Promise((r) => setTimeout(r, 1800));
 		if (playId === id) isPlaying = false;
 	}
@@ -52,7 +52,9 @@
 	function getState(semitones: number): 'correct' | 'wrong' | 'neutral' {
 		if (!answered) return 'neutral';
 		const key = String(semitones);
-		const correctKey = round.question.type === 'interval' ? String(round.question.interval.semitones) : '';
+		const correctKey = round.question.type === 'interval'
+			? String(round.question.interval.semitones)
+			: '';
 		if (key === correctKey) return 'correct';
 		if (key === round.answer) return 'wrong';
 		return 'neutral';
@@ -114,28 +116,13 @@
 			<!-- Answer buttons -->
 			<div class="flex flex-wrap justify-center gap-3 w-full max-w-sm">
 				{#each game.config.intervals as interval}
-					{@const state = getState(interval.semitones)}
-					<button
+					<AnswerButton
+						shortName={interval.shortName}
+						name={interval.name}
+						state={getState(interval.semitones)}
+						{answered}
 						onclick={() => selectAnswer(interval.semitones)}
-						disabled={answered}
-						class="w-28 h-28 rounded-2xl border-2 transition-all duration-200 relative
-							flex flex-col items-center justify-center gap-1 px-2
-							{state === 'correct'
-								? 'border-green-500 bg-green-500/10 text-green-600 dark:text-green-400 scale-105'
-								: state === 'wrong'
-									? 'border-destructive bg-destructive/10 text-destructive'
-									: answered
-										? 'border-border bg-background opacity-35 cursor-default'
-										: 'border-border bg-background hover:bg-accent cursor-pointer'}"
-					>
-						<span class="text-lg font-bold leading-none">{interval.shortName}</span>
-						<span class="text-[10px] opacity-70 leading-tight text-center">{interval.name}</span>
-						{#if state === 'correct'}
-							<Check class="size-3.5 absolute bottom-2 right-2" />
-						{:else if state === 'wrong'}
-							<X class="size-3.5 absolute bottom-2 right-2" />
-						{/if}
-					</button>
+					/>
 				{/each}
 			</div>
 		</div>
