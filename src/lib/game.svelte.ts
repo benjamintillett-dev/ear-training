@@ -35,6 +35,12 @@ export const ALL_TRIADS: Triad[] = [
 	{ id: 'diminished',semitones: [0, 3, 6],  name: 'Diminished', shortName: 'Dim' },
 ];
 
+export const ALL_SEVENTH_CHORDS: Triad[] = [
+	{ id: 'major7',   semitones: [0, 4, 7, 11], name: 'Major 7',    shortName: 'Maj7' },
+	{ id: 'dominant7',semitones: [0, 4, 7, 10], name: 'Dominant 7', shortName: 'Dom7' },
+	{ id: 'minor7',   semitones: [0, 3, 7, 10], name: 'Minor 7',    shortName: 'Min7' },
+];
+
 export type RoundQuestion =
 	| { type: 'interval'; interval: Interval }
 	| { type: 'triad'; triad: Triad };
@@ -51,6 +57,7 @@ export interface GameConfig {
 	direction: Direction;
 	intervals: Interval[];
 	triads: Triad[];
+	seventhChords: Triad[];
 }
 
 export interface GameState {
@@ -66,6 +73,7 @@ function createGameStore() {
 		direction: 'up',
 		intervals: ALL_INTERVALS.slice(0, 4),
 		triads: [],
+		seventhChords: [],
 	});
 
 	let rounds = $state<Round[]>([]);
@@ -79,11 +87,11 @@ function createGameStore() {
 		for (let i = 0; i < 10; i++) {
 			let question: RoundQuestion;
 
-			if (mode === 'harmony' && config.triads.length > 0) {
-				// Pick randomly from the combined pool of intervals and triads
+			if (mode === 'harmony' && (config.triads.length > 0 || config.seventhChords.length > 0)) {
 				const pool = [
 					...config.intervals.map(interval => ({ type: 'interval' as const, interval })),
 					...config.triads.map(triad => ({ type: 'triad' as const, triad })),
+					...config.seventhChords.map(triad => ({ type: 'triad' as const, triad })),
 				];
 				question = pool[Math.floor(Math.random() * pool.length)];
 			} else {

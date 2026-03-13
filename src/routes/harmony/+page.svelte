@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { game, ALL_INTERVALS, ALL_TRIADS } from '$lib/game.svelte.js';
+	import { game, ALL_INTERVALS, ALL_TRIADS, ALL_SEVENTH_CHORDS } from '$lib/game.svelte.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Play } from 'lucide-svelte';
 	import HomeButton from '$lib/components/HomeButton.svelte';
@@ -27,7 +27,18 @@
 		}
 	}
 
-	const totalSelected = $derived(game.config.intervals.length + game.config.triads.length);
+	function toggleSeventhChord(id: string) {
+		const selected = game.config.seventhChords;
+		const exists = selected.some((t) => t.id === id);
+		const chord = ALL_SEVENTH_CHORDS.find((t) => t.id === id)!;
+		if (exists) {
+			game.setConfig({ seventhChords: selected.filter((t) => t.id !== id) });
+		} else {
+			game.setConfig({ seventhChords: [...selected, chord] });
+		}
+	}
+
+	const totalSelected = $derived(game.config.intervals.length + game.config.triads.length + game.config.seventhChords.length);
 	const canStart = $derived(totalSelected >= 2);
 
 	function start() {
@@ -104,6 +115,37 @@
 								: 'border-border bg-background text-foreground hover:bg-accent'}"
 					>
 						{triad.shortName}
+					</button>
+				{/each}
+			</div>
+		</div>
+
+		<!-- 7th Chords -->
+		<div class="flex flex-col gap-2">
+			<div class="flex justify-between items-center px-1">
+				<span class="text-xs text-muted-foreground">7th Chords (C)</span>
+				<div class="flex gap-3">
+					<button
+						onclick={() => game.setConfig({ seventhChords: [...ALL_SEVENTH_CHORDS] })}
+						class="text-xs text-muted-foreground hover:text-foreground transition-colors"
+					>All</button>
+					<button
+						onclick={() => game.setConfig({ seventhChords: [] })}
+						class="text-xs text-muted-foreground hover:text-foreground transition-colors"
+					>None</button>
+				</div>
+			</div>
+			<div class="grid grid-cols-4 gap-3">
+				{#each ALL_SEVENTH_CHORDS as chord}
+					{@const selected = game.config.seventhChords.some((t) => t.id === chord.id)}
+					<button
+						onclick={() => toggleSeventhChord(chord.id)}
+						class="aspect-square rounded-2xl border-2 font-bold text-sm transition-all duration-150 cursor-pointer
+							{selected
+								? 'border-primary bg-primary text-primary-foreground'
+								: 'border-border bg-background text-foreground hover:bg-accent'}"
+					>
+						{chord.shortName}
 					</button>
 				{/each}
 			</div>

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { onMount, onDestroy } from 'svelte';
-	import { game } from '$lib/game.svelte.js';
+	import { game, ALL_SEVENTH_CHORDS } from '$lib/game.svelte.js';
 	import { playIntervalHarmonic, playTriad, preloadSampler, stopAll } from '$lib/audio.js';
 	import { Check, X, Volume2 } from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
@@ -165,6 +165,38 @@
 							>
 								<span class="text-lg font-bold leading-none">{triad.shortName}</span>
 								<span class="text-[10px] opacity-70 leading-tight text-center">{triad.name}</span>
+								{#if state === 'correct'}
+									<Check class="size-3.5 absolute bottom-2 right-2" />
+								{:else if state === 'wrong'}
+									<X class="size-3.5 absolute bottom-2 right-2" />
+								{/if}
+							</button>
+						{/each}
+					</div>
+				{/if}
+
+				{#if game.config.seventhChords.length > 0}
+					{#if game.config.intervals.length > 0 || game.config.triads.length > 0}
+						<div class="w-full border-t border-border"></div>
+					{/if}
+					<div class="flex flex-wrap justify-center gap-3 w-full">
+						{#each game.config.seventhChords as chord}
+							{@const state = getTriadState(chord.id)}
+							<button
+								onclick={() => selectAnswer(chord.id)}
+								disabled={answered}
+								class="w-28 h-28 rounded-2xl border-2 transition-all duration-200 relative
+									flex flex-col items-center justify-center gap-1 px-2
+									{state === 'correct'
+										? 'border-green-500 bg-green-500/10 text-green-600 dark:text-green-400 scale-105'
+										: state === 'wrong'
+											? 'border-destructive bg-destructive/10 text-destructive'
+											: answered
+												? 'border-border bg-background opacity-35 cursor-default'
+												: 'border-border bg-background hover:bg-accent cursor-pointer'}"
+							>
+								<span class="text-lg font-bold leading-none">{chord.shortName}</span>
+								<span class="text-[10px] opacity-70 leading-tight text-center">{chord.name}</span>
 								{#if state === 'correct'}
 									<Check class="size-3.5 absolute bottom-2 right-2" />
 								{:else if state === 'wrong'}
