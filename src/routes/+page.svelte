@@ -83,12 +83,12 @@
 	</div>
 
 	<!-- Actions -->
-	<div class="flex flex-col gap-2 w-full max-w-sm">
+	<div class="flex flex-col gap-4 w-full max-w-sm">
 		<Button class="w-full" size="lg" disabled={!canStart} onclick={start}>
 			<Play class="size-4" />
 			Start
 		</Button>
-		<Button variant="ghost" class="w-full" onclick={() => goto('/explore')}>
+		<Button variant="ghost" class="w-full" size="lg" onclick={() => goto('/explore')}>
 			<Search class="size-4" />
 			Explore Intervals
 		</Button>

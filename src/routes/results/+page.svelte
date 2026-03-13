@@ -5,7 +5,7 @@
 	import { RotateCcw } from 'lucide-svelte';
 
 	$effect(() => {
-		if (game.phase !== 'results') goto('/');
+		if (game.phase === 'config') goto('/');
 	});
 
 	const score = $derived(game.getScore());
@@ -28,12 +28,12 @@
 		<p class="text-sm text-muted-foreground">{getMessage(score)}</p>
 	</div>
 
-	<div class="flex flex-col gap-2 w-full max-w-sm">
-		<Button class="w-full" onclick={() => { game.startGame(); goto('/practice'); }}>
+	<div class="flex flex-col gap-4 w-full max-w-sm">
+		<Button class="w-full" size="lg" onclick={() => { game.startGame(); goto('/practice'); }}>
 			<RotateCcw class="size-4" />
 			Practice Again
 		</Button>
-		<Button variant="ghost" class="w-full" onclick={() => { game.reset(); goto('/'); }}>
+		<Button variant="ghost" class="w-full" size="lg" onclick={() => { game.reset(); goto('/'); }}>
 			Change Settings
 		</Button>
 	</div>

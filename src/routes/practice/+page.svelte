@@ -90,9 +90,7 @@
 					class="size-28 rounded-full border-2 flex items-center justify-center transition-all
 						{isPlaying
 							? 'border-primary bg-primary text-primary-foreground'
-							: !isLoading && !answered
-								? 'border-border bg-background hover:bg-accent ring-2 ring-primary/25 ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed'
-								: 'border-border bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed'}"
+							: 'border-border bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed'}"
 				>
 					<Volume2 class="size-10" />
 				</button>

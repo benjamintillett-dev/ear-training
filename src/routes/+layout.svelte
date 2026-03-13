@@ -13,7 +13,7 @@
 
 <div class="min-h-screen bg-background text-foreground">
 	{#key $page.url.pathname}
-		<div in:fade={{ duration: 150, delay: 50 }} out:fade={{ duration: 100 }}>
+		<div in:fade={{ duration: 150, delay: 50 }}>
 			{@render children()}
 		</div>
 	{/key}
