@@ -13,6 +13,14 @@
 	const score = $derived(game.getScore());
 	const mode = $derived(game.config.mode);
 
+	const settingsPath = $derived(
+		mode === 'interval' ? '/interval'
+		: mode === 'interval_piano' ? '/interval_piano'
+		: game.config.triads.length > 0 ? '/triads'
+		: game.config.seventhChords.length > 0 || game.config.shellSeventhChords.length > 0 ? '/sevenths'
+		: '/dyads'
+	);
+
 	function getMessage(s: number) {
 		if (s === 10) return 'Perfect!';
 		if (s >= 8) return 'Almost there!';
@@ -41,9 +49,9 @@
 			<RotateCcw class="size-4" />
 			Try Again
 		</Button>
-		<Button variant="secondary" class="w-full" size="lg" onclick={() => goto(mode === 'harmony' ? '/harmony' : mode === 'interval_piano' ? '/interval_piano' : '/interval')}>
+		<Button variant="secondary" class="w-full" size="lg" onclick={() => goto(settingsPath)}>
 			<Settings class="size-4" />
-			Back to Settings
+			Settings
 		</Button>
 		<Button variant="ghost" class="w-full" size="lg" onclick={() => { game.reset(); goto('/'); }}>
 			<Home class="size-4" />

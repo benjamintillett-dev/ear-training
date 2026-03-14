@@ -113,7 +113,8 @@ function createGameStore() {
 	}
 
 	function toggleInterval(semitones: number) {
-		const interval = ALL_INTERVALS.find((i) => i.semitones === semitones)!;
+		const interval = ALL_INTERVALS.find((i) => i.semitones === semitones);
+		if (!interval) return;
 		const exists = config.intervals.some((i) => i.semitones === semitones);
 		config = {
 			...config,
