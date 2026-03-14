@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { game } from '$lib/game.svelte.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { Music, Piano, Layers2, Search } from 'lucide-svelte';
+	import { Music, Music2, Piano, Layers2, Hash, Search } from 'lucide-svelte';
 
 	// If returning home from a session, reset state
 	$effect(() => {
@@ -26,9 +26,17 @@
 			<Piano class="size-4" />
 			Piano Intervals
 		</Button>
-		<Button class="w-full" size="lg" variant="secondary" onclick={() => goto('/harmony')}>
+		<Button class="w-full" size="lg" variant="secondary" onclick={() => goto('/dyads')}>
 			<Layers2 class="size-4" />
-			Harmonic Practice
+			Dyads
+		</Button>
+		<Button class="w-full" size="lg" variant="secondary" onclick={() => goto('/triads')}>
+			<Music2 class="size-4" />
+			Triads
+		</Button>
+		<Button class="w-full" size="lg" variant="secondary" onclick={() => goto('/sevenths')}>
+			<Hash class="size-4" />
+			7th Chords
 		</Button>
 		<Button variant="ghost" class="w-full" size="lg" onclick={() => goto('/explore')}>
 			<Search class="size-4" />

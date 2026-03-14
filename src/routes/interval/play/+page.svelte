@@ -4,8 +4,7 @@
 	import { game } from '$lib/game.svelte.js';
 	import { playInterval, preloadSampler, stopAll } from '$lib/audio.js';
 	import { Volume2, ArrowUp, ArrowDown } from 'lucide-svelte';
-	import { fade } from 'svelte/transition';
-	import HomeButton from '$lib/components/HomeButton.svelte';
+import HomeButton from '$lib/components/HomeButton.svelte';
 	import AnswerButton from '$lib/components/AnswerButton.svelte';
 
 	$effect(() => {
@@ -20,6 +19,10 @@
 	let playId = 0;
 	let destroyed = false;
 	let timers: ReturnType<typeof setTimeout>[] = [];
+
+	function delay(ms: number): Promise<void> {
+		return new Promise((r) => { timers.push(setTimeout(r, ms)); });
+	}
 
 	async function play() {
 		if (!round || round.question.type !== 'interval' || destroyed) return;
@@ -42,15 +45,16 @@
 		timers.forEach(clearTimeout);
 	});
 
-	function selectAnswer(semitones: number) {
+	async function selectAnswer(semitones: number) {
 		if (answered || destroyed) return;
 		game.submitAnswer(String(semitones));
-		timers.push(setTimeout(() => {
-			if (destroyed) return;
-			game.nextRound();
-			if (game.phase === 'results') goto('/results');
-			else { stopAll(); play(); }
-		}, 700));
+
+		await delay(600);
+		if (destroyed) return;
+
+		game.nextRound();
+		if (game.phase === 'results') goto('/results');
+		else { stopAll(); play(); }
 	}
 
 	function getState(semitones: number): 'correct' | 'wrong' | 'neutral' {
@@ -84,11 +88,7 @@
 		{/each}
 	</div>
 
-	{#key game.currentRound}
-		<div
-			class="flex flex-col items-center gap-8 w-full"
-			in:fade={{ duration: 200, delay: 50 }}
-		>
+	<div class="flex flex-col items-center gap-8 w-full">
 			<!-- Play button -->
 			<div class="flex flex-col items-center gap-3">
 				<div class="flex items-center gap-1.5 text-muted-foreground text-xs">
@@ -103,7 +103,7 @@
 
 				<button
 					onclick={play}
-					disabled={isPlaying || isLoading}
+					disabled={isPlaying || isLoading || answered}
 					class="size-28 rounded-full border-2 flex items-center justify-center transition-all
 						{isPlaying
 							? 'border-primary bg-primary text-primary-foreground'
@@ -129,7 +129,6 @@
 					/>
 				{/each}
 			</div>
-		</div>
-	{/key}
+	</div>
 
 </div>

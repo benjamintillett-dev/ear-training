@@ -1,8 +1,8 @@
 import { SplendidGrandPiano, Soundfont } from 'smplr';
+import { BASE_MIDI } from './theory.js';
 
-// MIDI note number for a semitone offset from C4 (MIDI 60)
 function midiNote(semitoneOffsetFromC4: number): number {
-	return 60 + semitoneOffsetFromC4;
+	return BASE_MIDI + semitoneOffsetFromC4;
 }
 
 export interface SoundPreset {

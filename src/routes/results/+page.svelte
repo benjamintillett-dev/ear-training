@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { game } from '$lib/game.svelte.js';
+	import { fade } from 'svelte/transition';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { RotateCcw, Settings, Home } from 'lucide-svelte';
 	import HomeButton from '$lib/components/HomeButton.svelte';
@@ -22,7 +23,7 @@
 
 <HomeButton />
 
-<div class="flex min-h-screen flex-col items-center justify-center gap-8 p-6">
+<div class="flex min-h-screen flex-col items-center justify-center gap-8 p-6" in:fade={{ duration: 300 }}>
 
 	<div class="text-center space-y-1">
 		<div class="flex items-baseline justify-center gap-1">

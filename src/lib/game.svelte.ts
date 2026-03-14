@@ -13,41 +13,8 @@ export interface Chord {
 	shortName: string;
 }
 
-export const ALL_INTERVALS: Interval[] = [
-	{ semitones: 0, name: 'Perfect Unison', shortName: 'P1' },
-	{ semitones: 1, name: 'Minor 2nd', shortName: 'm2' },
-	{ semitones: 2, name: 'Major 2nd', shortName: 'M2' },
-	{ semitones: 3, name: 'Minor 3rd', shortName: 'm3' },
-	{ semitones: 4, name: 'Major 3rd', shortName: 'M3' },
-	{ semitones: 5, name: 'Perfect 4th', shortName: 'P4' },
-	{ semitones: 6, name: 'Tritone', shortName: 'TT' },
-	{ semitones: 7, name: 'Perfect 5th', shortName: 'P5' },
-	{ semitones: 8, name: 'Minor 6th', shortName: 'm6' },
-	{ semitones: 9, name: 'Major 6th', shortName: 'M6' },
-	{ semitones: 10, name: 'Minor 7th', shortName: 'm7' },
-	{ semitones: 11, name: 'Major 7th', shortName: 'M7' },
-	{ semitones: 12, name: 'Octave', shortName: 'P8' },
-];
-
-export const ALL_TRIADS: Chord[] = [
-	{ id: 'major',      semitones: [0, 4, 7], name: 'Major',      shortName: 'Maj' },
-	{ id: 'minor',      semitones: [0, 3, 7], name: 'Minor',      shortName: 'Min' },
-	{ id: 'augmented',  semitones: [0, 4, 8], name: 'Augmented',  shortName: 'Aug' },
-	{ id: 'diminished', semitones: [0, 3, 6], name: 'Diminished', shortName: 'Dim' },
-];
-
-export const ALL_SEVENTH_CHORDS: Chord[] = [
-	{ id: 'major7',    semitones: [0, 4, 7, 11], name: 'Major 7',    shortName: 'Maj7' },
-	{ id: 'dominant7', semitones: [0, 4, 7, 10], name: 'Dominant 7', shortName: 'Dom7' },
-	{ id: 'minor7',    semitones: [0, 3, 7, 10], name: 'Minor 7',    shortName: 'Min7' },
-];
-
-// Shell voicings: root + 3rd + 7th (no 5th)
-export const ALL_SHELL_SEVENTH_CHORDS: Chord[] = [
-	{ id: 'shell_major7',    semitones: [0, 4, 11], name: 'Major 7 Shell',    shortName: 'Maj7s' },
-	{ id: 'shell_dominant7', semitones: [0, 4, 10], name: 'Dominant 7 Shell', shortName: 'Dom7s' },
-	{ id: 'shell_minor7',    semitones: [0, 3, 10], name: 'Minor 7 Shell',    shortName: 'Min7s' },
-];
+import { ALL_INTERVALS, ALL_TRIADS, ALL_SEVENTH_CHORDS, ALL_SHELL_SEVENTH_CHORDS } from './theory.js';
+export { ALL_INTERVALS, ALL_TRIADS, ALL_SEVENTH_CHORDS, ALL_SHELL_SEVENTH_CHORDS };
 
 export type RoundQuestion =
 	| { type: 'interval'; interval: Interval }
@@ -73,7 +40,7 @@ function createGameStore() {
 	let config = $state<GameConfig>({
 		mode: 'interval',
 		direction: 'up',
-		intervals: ALL_INTERVALS.filter((i) => [0, 2, 4, 5, 7, 9, 11, 12].includes(i.semitones)),
+		intervals: ALL_INTERVALS.filter((i) => [2, 4, 5, 7, 9, 11, 12].includes(i.semitones)),
 		triads: [],
 		seventhChords: [],
 		shellSeventhChords: [],

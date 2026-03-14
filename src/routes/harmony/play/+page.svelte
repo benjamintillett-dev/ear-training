@@ -4,8 +4,7 @@
 	import { game } from '$lib/game.svelte.js';
 	import { playIntervalHarmonic, playTriad, preloadSampler, stopAll } from '$lib/audio.js';
 	import { Volume2 } from 'lucide-svelte';
-	import { fade } from 'svelte/transition';
-	import HomeButton from '$lib/components/HomeButton.svelte';
+import HomeButton from '$lib/components/HomeButton.svelte';
 	import AnswerButton from '$lib/components/AnswerButton.svelte';
 
 	$effect(() => {
@@ -20,6 +19,24 @@
 	let playId = 0;
 	let destroyed = false;
 	let timers: ReturnType<typeof setTimeout>[] = [];
+
+	function delay(ms: number): Promise<void> {
+		return new Promise((r) => { timers.push(setTimeout(r, ms)); });
+	}
+
+	function playKey(key: string) {
+		const n = parseInt(key);
+		if (!isNaN(n)) {
+			playIntervalHarmonic(n);
+		} else {
+			const chord = [
+				...game.config.triads,
+				...game.config.seventhChords,
+				...game.config.shellSeventhChords
+			].find(c => c.id === key);
+			if (chord) playTriad(chord.semitones);
+		}
+	}
 
 	async function play() {
 		if (!round || destroyed) return;
@@ -46,15 +63,16 @@
 		timers.forEach(clearTimeout);
 	});
 
-	function selectAnswer(key: string) {
+	async function selectAnswer(key: string) {
 		if (answered || destroyed) return;
 		game.submitAnswer(key);
-		timers.push(setTimeout(() => {
-			if (destroyed) return;
-			game.nextRound();
-			if (game.phase === 'results') goto('/results');
-			else { stopAll(); play(); }
-		}, 700));
+
+		await delay(600);
+		if (destroyed) return;
+
+		game.nextRound();
+		if (game.phase === 'results') goto('/results');
+		else { stopAll(); play(); }
 	}
 
 	function getState(key: string): 'correct' | 'wrong' | 'neutral' {
@@ -87,16 +105,12 @@
 		{/each}
 	</div>
 
-	{#key game.currentRound}
-		<div
-			class="flex flex-col items-center gap-8 w-full"
-			in:fade={{ duration: 200, delay: 50 }}
-		>
+	<div class="flex flex-col items-center gap-8 w-full">
 			<!-- Play button -->
 			<div class="flex flex-col items-center gap-3">
 				<button
 					onclick={play}
-					disabled={isPlaying || isLoading}
+					disabled={isPlaying || isLoading || answered}
 					class="size-28 rounded-full border-2 flex items-center justify-center transition-all
 						{isPlaying
 							? 'border-primary bg-primary text-primary-foreground'
@@ -175,7 +189,6 @@
 					</div>
 				{/if}
 			</div>
-		</div>
-	{/key}
+	</div>
 
 </div>

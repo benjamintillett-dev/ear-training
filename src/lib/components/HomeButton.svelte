@@ -1,21 +1,16 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { game } from '$lib/game.svelte.js';
 	import { stopAll } from '$lib/audio.js';
-	import { House } from 'lucide-svelte';
 
-	function goHome() {
+	function goBack() {
 		stopAll();
-		game.reset();
-		goto('/');
+		history.back();
 	}
 </script>
 
 <button
-	onclick={goHome}
-	class="fixed top-4 right-4 size-10 rounded-full border border-border bg-background shadow-sm
-		flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors z-10"
-	aria-label="Home"
+	onclick={goBack}
+	class="fixed top-4 left-4 h-8 px-3 rounded-full border border-border bg-background shadow-sm
+		flex items-center text-xs text-muted-foreground hover:text-foreground transition-colors z-10"
 >
-	<House class="size-4" />
+	Settings
 </button>
