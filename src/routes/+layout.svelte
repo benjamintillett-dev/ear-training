@@ -9,6 +9,7 @@
 	let { children } = $props();
 
 	onMount(() => {
+		if (!/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) return;
 		const requestFullscreen = () => {
 			document.documentElement.requestFullscreen?.().catch(() => {});
 			document.removeEventListener('click', requestFullscreen);

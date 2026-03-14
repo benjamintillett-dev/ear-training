@@ -4,8 +4,8 @@
 	import { game } from '$lib/game.svelte.js';
 	import { playInterval, preloadSampler, stopAll } from '$lib/audio.js';
 	import { Volume2 } from 'lucide-svelte';
-import HomeButton from '$lib/components/HomeButton.svelte';
 	import PianoKeyboard from '$lib/components/PianoKeyboard.svelte';
+	import HomeButton from '$lib/components/HomeButton.svelte';
 
 	$effect(() => {
 		if (game.phase === 'config') goto('/');
@@ -69,7 +69,7 @@ import HomeButton from '$lib/components/HomeButton.svelte';
 	}
 </script>
 
-<HomeButton />
+<HomeButton href="/" />
 
 <div class="flex min-h-dvh flex-col items-center justify-center gap-8 p-6 px-3 md:px-6">
 
