@@ -23,7 +23,7 @@
 
 <HomeButton href="/" />
 
-<div class="flex min-h-screen flex-col items-center justify-center gap-8 p-6" in:fade={{ duration: 300 }}>
+<div class="flex min-h-dvh flex-col items-center justify-center gap-8 p-6" in:fade={{ duration: 300 }}>
 
 	<div class="text-center space-y-1">
 		<div class="flex items-baseline justify-center gap-1">

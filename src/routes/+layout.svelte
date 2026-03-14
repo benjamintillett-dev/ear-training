@@ -16,7 +16,17 @@
 		};
 		// Fullscreen must be triggered by a user gesture; attach to first click
 		document.addEventListener('click', requestFullscreen);
-		return () => document.removeEventListener('click', requestFullscreen);
+
+		// Haptic feedback on button taps (Android Chrome)
+		const haptic = (e: Event) => {
+			if ((e.target as Element)?.closest('button')) navigator.vibrate?.(10);
+		};
+		document.addEventListener('click', haptic);
+
+		return () => {
+			document.removeEventListener('click', requestFullscreen);
+			document.removeEventListener('click', haptic);
+		};
 	});
 </script>
 
@@ -26,7 +36,7 @@
 
 <SoundDrawer />
 
-<div class="min-h-screen bg-background text-foreground">
+<div class="min-h-dvh bg-background text-foreground">
 	{#key $page.url.pathname}
 		<div in:fade={{ duration: 150, delay: 50 }}>
 			{@render children()}

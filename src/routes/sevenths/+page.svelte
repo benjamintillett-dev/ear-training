@@ -23,7 +23,7 @@
 
 <HomeButton href="/" />
 
-<div class="flex min-h-screen flex-col items-center justify-center gap-8 p-6">
+<div class="flex min-h-dvh flex-col items-center justify-center gap-8 p-6">
 
 	<div class="text-center">
 		<h1 class="text-2xl font-semibold tracking-tight">7th Chord Practice</h1>

@@ -1,10 +1,9 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { playInterval, playIntervalHarmonic, playNoteSequence, preloadSampler, stopAll } from '$lib/audio.js';
+	import { playInterval, playNoteSequence, preloadSampler, stopAll } from '$lib/audio.js';
 	import { Button } from '$lib/components/ui/button/index.js';
-	import { ArrowUp, ArrowDown, ArrowUpDown, ChevronLeft, Volume2, Layers2 } from 'lucide-svelte';
-	import type { Direction } from '$lib/game.svelte.js';
+	import { ArrowUp, ArrowDown, ChevronLeft, Volume2 } from 'lucide-svelte';
 
 	let { data } = $props();
 	const interval = $derived(data.interval);
@@ -190,15 +189,7 @@
 
 	const melodies = $derived(MELODIES[interval.semitones] ?? []);
 
-	let direction = $state<Direction>('up');
 	let playingKey = $state<string | null>(null);
-
-	const directions: { value: Direction; label: string; icon: typeof ArrowUp }[] = [
-		{ value: 'up', label: 'Ascending', icon: ArrowUp },
-		{ value: 'down', label: 'Descending', icon: ArrowDown },
-		{ value: 'both', label: 'Both', icon: ArrowUpDown },
-		{ value: 'harmonic', label: 'Harmonic', icon: Layers2 },
-	];
 
 	onMount(async () => {
 		await preloadSampler();
@@ -209,18 +200,8 @@
 	async function playMain() {
 		if (playingKey !== null) return;
 		playingKey = 'interval';
-		if (direction === 'both') {
-			await playInterval(interval.semitones, 'up');
-			await new Promise((r) => setTimeout(r, 1800));
-			await playInterval(interval.semitones, 'down');
-			await new Promise((r) => setTimeout(r, 1800));
-		} else if (direction === 'harmonic') {
-			await playIntervalHarmonic(interval.semitones);
-			await new Promise((r) => setTimeout(r, 2500));
-		} else {
-			await playInterval(interval.semitones, direction);
-			await new Promise((r) => setTimeout(r, 1800));
-		}
+		await playInterval(interval.semitones, 'up');
+		await new Promise((r) => setTimeout(r, 1800));
 		playingKey = null;
 	}
 
@@ -232,7 +213,7 @@
 	}
 </script>
 
-<div class="flex min-h-screen flex-col items-center gap-8 px-6 pt-12 pb-16">
+<div class="flex min-h-dvh flex-col items-center gap-8 p-6">
 
 	<!-- Back -->
 	<div class="w-full max-w-sm sticky top-0 bg-background/80 backdrop-blur-sm pt-2 pb-3 z-10">
@@ -249,27 +230,13 @@
 		<p class="text-muted-foreground text-sm">{interval.name}</p>
 	</div>
 
-	<!-- Player card: direction + play -->
-	<div class="w-full max-w-sm rounded-2xl border border-border bg-card p-5 flex flex-col items-center gap-4">
-		<div class="flex rounded-full border border-border bg-muted p-1 gap-1">
-			{#each directions as dir}
-				{@const active = direction === dir.value}
-				<button
-					onclick={() => (direction = dir.value)}
-					class="flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-all
-						{active ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}"
-				>
-					<dir.icon class="size-3.5" />
-					{dir.label}
-				</button>
-			{/each}
-		</div>
-
+	<!-- Player card -->
+	<div class="w-full max-w-sm rounded-2xl border-2 border-border bg-card p-5 flex flex-col items-center gap-4">
 		<button
 			onclick={playMain}
 			disabled={playingKey !== null}
 			class="size-20 rounded-full border-2 flex items-center justify-center transition-all duration-150
-				disabled:opacity-50 disabled:cursor-not-allowed
+				disabled:opacity-40 disabled:cursor-not-allowed
 				{playingKey === 'interval'
 					? 'border-primary bg-primary text-primary-foreground'
 					: 'border-border bg-background hover:bg-accent'}"

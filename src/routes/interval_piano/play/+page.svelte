@@ -71,7 +71,7 @@
 
 <HomeButton href="/" />
 
-<div class="flex min-h-dvh flex-col items-center justify-center gap-8 p-6 px-3 md:px-6">
+<div class="flex min-h-dvh flex-col items-center justify-center gap-8 px-3 py-6 md:px-6">
 
 	<!-- Progress dots -->
 	<div class="flex gap-2">
@@ -80,7 +80,7 @@
 			<div
 				class="size-2 rounded-full transition-colors duration-300
 					{i < game.currentRound
-						? (r?.correct ? 'bg-green-500' : 'bg-destructive')
+						? (r?.correct ? 'bg-success' : 'bg-destructive')
 						: i === game.currentRound
 							? 'bg-foreground'
 							: 'bg-border'}"
@@ -106,7 +106,7 @@
 				class="size-20 rounded-full border-2 flex items-center justify-center transition-all
 					{isPlaying
 						? 'border-primary bg-primary text-primary-foreground'
-						: 'border-border bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed'}"
+						: 'border-border bg-background hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed'}"
 			>
 				<Volume2 class="size-8" />
 			</button>

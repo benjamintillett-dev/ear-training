@@ -33,28 +33,26 @@
 		const state = getState(s);
 		const enabled = enabledSemitones.includes(s);
 
-		const base = 'w-full h-full rounded-2xl border-2 transition-all duration-200 relative flex flex-col items-center justify-center gap-0.5 px-1';
+		const base = 'w-full h-full rounded-2xl border-2 transition-all duration-150 relative flex flex-col items-center justify-center gap-0.5 px-1';
 
-		if (state === 'correct') return `${base} border-green-500 bg-green-500/10 text-green-600 dark:text-green-400`;
+		if (state === 'correct') return `${base} border-success bg-success/10 text-success`;
 		if (state === 'wrong')   return `${base} border-destructive bg-destructive/10 text-destructive`;
 		if (!enabled)            return `${base} cursor-not-allowed`;
 		if (isBlack) {
-			if (answered) return `${base} border-transparent opacity-35 cursor-default`;
+			if (answered) return `${base} border-transparent opacity-40 cursor-default`;
 			return `${base} border-transparent cursor-pointer`;
 		}
-		if (answered) return `${base} border-border bg-background opacity-35 cursor-default`;
-		return `${base} border-border bg-background hover:bg-accent cursor-pointer`;
+		if (answered) return `${base} border-border bg-card opacity-40 cursor-default`;
+		return `${base} border-border bg-card hover:bg-accent cursor-pointer`;
 	}
 
 	function btnStyle(s: number, isBlack: boolean): string {
 		const state = getState(s);
 		const enabled = enabledSemitones.includes(s);
 		if (state === 'correct' || state === 'wrong') return '';
-		if (!enabled) return isBlack
-			? 'background-color: #666; color: #bbb; border-color: #666;'
-			: 'background-color: #ccc; color: #888; border-color: #bbb;';
+		if (!enabled) return 'background-color: #1e293b; color: #334155; border-color: #1e293b;';
 		if (!isBlack) return '';
-		return 'background-color: #111; color: white;';
+		return 'background-color: #0f172a; color: #94a3b8; border-color: #334155;';
 	}
 </script>
 

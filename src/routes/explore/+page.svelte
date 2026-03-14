@@ -9,7 +9,7 @@
 	onMount(() => preloadSampler());
 </script>
 
-<div class="flex min-h-screen flex-col items-center gap-8 px-6 pt-12 pb-16">
+<div class="flex min-h-dvh flex-col items-center gap-8 p-6">
 
 	<div class="w-full max-w-sm sticky top-0 bg-background/80 backdrop-blur-sm pt-2 pb-3 z-10">
 		<Button variant="ghost" size="default" onclick={() => goto('/')}>
@@ -27,7 +27,7 @@
 			<button
 				onclick={() => goto(`/explore/${interval.semitones}`)}
 				class="aspect-square rounded-2xl border-2 border-border bg-background text-foreground
-					transition-all duration-150 cursor-pointer hover:bg-accent hover:scale-105
+					transition-all duration-150 cursor-pointer hover:bg-accent
 					flex flex-col items-center justify-center gap-0.5 px-1"
 			>
 				<span class="text-sm font-bold leading-none">{interval.shortName}</span>
