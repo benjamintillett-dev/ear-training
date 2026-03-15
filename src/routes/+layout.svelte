@@ -5,6 +5,7 @@
 	import { fade } from 'svelte/transition';
 	import { onMount } from 'svelte';
 	import SoundDrawer from '$lib/components/SoundDrawer.svelte';
+	import PWAUpdatePrompt from '$lib/components/PWAUpdatePrompt.svelte';
 
 	let { children } = $props();
 
@@ -35,6 +36,7 @@
 </svelte:head>
 
 <SoundDrawer />
+<PWAUpdatePrompt />
 
 <div class="min-h-dvh bg-background text-foreground">
 	{#key $page.url.pathname}

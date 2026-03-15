@@ -1,4 +1,6 @@
-import { SplendidGrandPiano, Soundfont } from 'smplr';
+import { SplendidGrandPiano, Soundfont, CacheStorage } from 'smplr';
+
+const storage = new CacheStorage();
 import { BASE_MIDI } from './theory.js';
 
 function midiNote(semitoneOffsetFromC4: number): number {
@@ -76,11 +78,11 @@ async function getInstrument(): Promise<{ inst: Instrument; ctx: AudioContext }>
 
 	instrumentLoading = (async () => {
 		if (activePresetId === 'grand-piano') {
-			const p = new SplendidGrandPiano(ctx, { destination: comp });
+			const p = new SplendidGrandPiano(ctx, { destination: comp, storage });
 			await p.load;
 			instrument = p as unknown as Instrument;
 		} else {
-			const sf = new Soundfont(ctx, { instrument: SOUNDFONT_MAP[activePresetId], destination: comp });
+			const sf = new Soundfont(ctx, { instrument: SOUNDFONT_MAP[activePresetId], destination: comp, storage });
 			await sf.load;
 			instrument = sf as unknown as Instrument;
 		}
