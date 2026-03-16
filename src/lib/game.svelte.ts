@@ -13,12 +13,13 @@ export interface Chord {
 	shortName: string;
 }
 
-import { ALL_INTERVALS, ALL_TRIADS, ALL_SEVENTH_CHORDS, ALL_SHELL_SEVENTH_CHORDS } from './theory.js';
-export { ALL_INTERVALS, ALL_TRIADS, ALL_SEVENTH_CHORDS, ALL_SHELL_SEVENTH_CHORDS };
+import { ALL_INTERVALS, ALL_TRIADS, ALL_SEVENTH_CHORDS, ALL_SHELL_SEVENTH_CHORDS, SCALE_DEGREES, type ScaleDegree } from './theory.js';
+export { ALL_INTERVALS, ALL_TRIADS, ALL_SEVENTH_CHORDS, ALL_SHELL_SEVENTH_CHORDS, SCALE_DEGREES, type ScaleDegree };
 
 export type RoundQuestion =
 	| { type: 'interval'; interval: Interval }
-	| { type: 'chord'; chord: Chord };
+	| { type: 'chord'; chord: Chord }
+	| { type: 'scale_degree'; scaleDegree: ScaleDegree };
 
 export interface Round {
 	question: RoundQuestion;
@@ -28,12 +29,14 @@ export interface Round {
 }
 
 export interface GameConfig {
-	mode: 'interval' | 'interval_piano' | 'harmony';
+	mode: 'interval' | 'interval_piano' | 'harmony' | 'scale_degree';
 	direction: Direction;
 	intervals: Interval[];
 	triads: Chord[];
 	seventhChords: Chord[];
 	shellSeventhChords: Chord[];
+	scaleDegrees: ScaleDegree[];
+	settingsPath: string;
 }
 
 function createGameStore() {
@@ -44,20 +47,25 @@ function createGameStore() {
 		triads: [],
 		seventhChords: [],
 		shellSeventhChords: [],
+		scaleDegrees: [...SCALE_DEGREES],
+		settingsPath: '/',
 	});
 
 	let rounds = $state<Round[]>([]);
 	let currentRound = $state(0);
 	let phase = $state<'config' | 'playing' | 'results'>('config');
 
-	function startGame(mode: 'interval' | 'interval_piano' | 'harmony') {
-		config = { ...config, mode };
+	function startGame(mode: 'interval' | 'interval_piano' | 'harmony' | 'scale_degree', settingsPath?: string) {
+		config = { ...config, mode, settingsPath: settingsPath ?? '/' };
 		const generated: Round[] = [];
 
 		for (let i = 0; i < 10; i++) {
 			let question: RoundQuestion;
 
-			if (mode === 'harmony' && (config.triads.length > 0 || config.seventhChords.length > 0 || config.shellSeventhChords.length > 0)) {
+			if (mode === 'scale_degree') {
+				const deg = config.scaleDegrees[Math.floor(Math.random() * config.scaleDegrees.length)];
+				question = { type: 'scale_degree', scaleDegree: deg };
+			} else if (mode === 'harmony' && (config.triads.length > 0 || config.seventhChords.length > 0 || config.shellSeventhChords.length > 0)) {
 				const pool = [
 					...config.intervals.map((interval) => ({ type: 'interval' as const, interval })),
 					...config.triads.map((chord) => ({ type: 'chord' as const, chord })),
@@ -71,7 +79,9 @@ function createGameStore() {
 			}
 
 			let direction: 'up' | 'down';
-			if (mode === 'harmony' || config.direction === 'both') {
+			if (mode === 'scale_degree') {
+				direction = 'up';
+			} else if (mode === 'harmony' || config.direction === 'both') {
 				direction = Math.random() < 0.5 ? 'up' : 'down';
 			} else {
 				direction = config.direction as 'up' | 'down';
@@ -90,6 +100,8 @@ function createGameStore() {
 		round.answer = key;
 		round.correct = round.question.type === 'interval'
 			? key === String(round.question.interval.semitones)
+			: round.question.type === 'scale_degree'
+			? key === String(round.question.scaleDegree.degree)
 			: key === round.question.chord.id;
 		rounds = [...rounds];
 	}
@@ -124,36 +136,32 @@ function createGameStore() {
 		};
 	}
 
-	function toggleTriad(id: string) {
-		const chord = ALL_TRIADS.find((t) => t.id === id)!;
-		const exists = config.triads.some((t) => t.id === id);
+	function toggleChord<K extends 'triads' | 'seventhChords' | 'shellSeventhChords'>(
+		key: K, all: Chord[], id: string
+	) {
+		const chord = all.find((c) => c.id === id)!;
+		const exists = config[key].some((c: Chord) => c.id === id);
 		config = {
 			...config,
-			triads: exists
-				? config.triads.filter((t) => t.id !== id)
-				: [...config.triads, chord],
+			[key]: exists
+				? config[key].filter((c: Chord) => c.id !== id)
+				: [...config[key], chord],
 		};
 	}
 
-	function toggleSeventhChord(id: string) {
-		const chord = ALL_SEVENTH_CHORDS.find((c) => c.id === id)!;
-		const exists = config.seventhChords.some((c) => c.id === id);
-		config = {
-			...config,
-			seventhChords: exists
-				? config.seventhChords.filter((c) => c.id !== id)
-				: [...config.seventhChords, chord],
-		};
-	}
+	function toggleTriad(id: string) { toggleChord('triads', ALL_TRIADS, id); }
+	function toggleSeventhChord(id: string) { toggleChord('seventhChords', ALL_SEVENTH_CHORDS, id); }
+	function toggleShellSeventhChord(id: string) { toggleChord('shellSeventhChords', ALL_SHELL_SEVENTH_CHORDS, id); }
 
-	function toggleShellSeventhChord(id: string) {
-		const chord = ALL_SHELL_SEVENTH_CHORDS.find((c) => c.id === id)!;
-		const exists = config.shellSeventhChords.some((c) => c.id === id);
+	function toggleScaleDegree(degree: number) {
+		const sd = SCALE_DEGREES.find((d) => d.degree === degree);
+		if (!sd) return;
+		const exists = config.scaleDegrees.some((d) => d.degree === degree);
 		config = {
 			...config,
-			shellSeventhChords: exists
-				? config.shellSeventhChords.filter((c) => c.id !== id)
-				: [...config.shellSeventhChords, chord],
+			scaleDegrees: exists
+				? config.scaleDegrees.filter((d) => d.degree !== degree)
+				: [...config.scaleDegrees, sd].sort((a, b) => a.degree - b.degree),
 		};
 	}
 
@@ -174,6 +182,7 @@ function createGameStore() {
 		toggleTriad,
 		toggleSeventhChord,
 		toggleShellSeventhChord,
+		toggleScaleDegree,
 	};
 }
 

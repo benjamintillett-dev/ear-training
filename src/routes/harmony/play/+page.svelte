@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { onMount, onDestroy } from 'svelte';
 	import { game } from '$lib/game.svelte.js';
-	import { playIntervalHarmonic, playTriad, preloadSampler, stopAll } from '$lib/audio.js';
+	import { playIntervalHarmonic, playTriad } from '$lib/audio.js';
+	import { createPlayController } from '$lib/play-controller.svelte.js';
 	import { Volume2 } from 'lucide-svelte';
 	import AnswerButton from '$lib/components/AnswerButton.svelte';
 	import HomeButton from '$lib/components/HomeButton.svelte';
+	import StatsDrawer from '$lib/components/StatsDrawer.svelte';
+	import ProgressDots from '$lib/components/ProgressDots.svelte';
 
 	$effect(() => {
 		if (game.phase === 'config') goto('/');
@@ -14,72 +16,25 @@
 	const round = $derived(game.rounds[game.currentRound]);
 	const answered = $derived(round != null && round.answer !== null);
 
-	let isPlaying = $state(false);
-	let isLoading = $state(true);
-	let playId = 0;
-	let destroyed = false;
-	let timers: ReturnType<typeof setTimeout>[] = [];
-
-	function delay(ms: number): Promise<void> {
-		return new Promise((r) => { timers.push(setTimeout(r, ms)); });
-	}
-
-	function playKey(key: string) {
-		const n = parseInt(key);
-		if (!isNaN(n)) {
-			playIntervalHarmonic(n);
-		} else {
-			const chord = [
-				...game.config.triads,
-				...game.config.seventhChords,
-				...game.config.shellSeventhChords
-			].find(c => c.id === key);
-			if (chord) playTriad(chord.semitones);
-		}
-	}
-
-	async function play() {
-		if (!round || destroyed) return;
-		const id = ++playId;
-		isPlaying = true;
-		if (round.question.type === 'interval') {
-			await playIntervalHarmonic(round.question.interval.semitones);
-		} else {
-			await playTriad(round.question.chord.semitones);
-		}
-		await new Promise<void>((r) => { timers.push(setTimeout(r, 2500)); });
-		if (playId === id && !destroyed) isPlaying = false;
-	}
-
-	onMount(async () => {
-		await preloadSampler();
-		isLoading = false;
-		play();
+	const ctrl = createPlayController({
+		playFn: async () => {
+			if (!round) return;
+			if (round.question.type === 'interval') {
+				await playIntervalHarmonic(round.question.interval.semitones);
+			} else if (round.question.type === 'chord') {
+				await playTriad(round.question.chord.semitones);
+			}
+		},
+		cooldownMs: 2500,
 	});
-
-	onDestroy(() => {
-		destroyed = true;
-		stopAll();
-		timers.forEach(clearTimeout);
-	});
-
-	async function selectAnswer(key: string) {
-		if (answered || destroyed) return;
-		game.submitAnswer(key);
-
-		await delay(600);
-		if (destroyed) return;
-
-		game.nextRound();
-		if (game.phase === 'results') goto('/results');
-		else { stopAll(); play(); }
-	}
 
 	function getState(key: string): 'correct' | 'wrong' | 'neutral' {
 		if (!answered) return 'neutral';
 		const correctKey = round.question.type === 'interval'
 			? String(round.question.interval.semitones)
-			: round.question.chord.id;
+			: round.question.type === 'chord'
+			? round.question.chord.id
+			: String(round.question.scaleDegree.degree);
 		if (key === correctKey) return 'correct';
 		if (key === round.answer) return 'wrong';
 		return 'neutral';
@@ -87,39 +42,35 @@
 </script>
 
 <HomeButton href="/" />
+<StatsDrawer
+	items={[
+		...game.config.intervals.map((i) => ({ key: String(i.semitones), name: i.name, shortName: i.shortName })),
+		...game.config.triads.map((c) => ({ key: c.id, name: c.name, shortName: c.shortName })),
+		...game.config.seventhChords.map((c) => ({ key: c.id, name: c.name, shortName: c.shortName })),
+		...game.config.shellSeventhChords.map((c) => ({ key: c.id, name: c.name, shortName: c.shortName })),
+	]}
+	modes={['harmony']}
+/>
 
 <div class="flex min-h-dvh flex-col items-center justify-center gap-8 p-6">
 
-	<!-- Progress dots -->
-	<div class="flex gap-2">
-		{#each Array(10) as _, i}
-			{@const r = game.rounds[i]}
-			<div
-				class="size-2 rounded-full transition-colors duration-300
-					{i < game.currentRound
-						? (r?.correct ? 'bg-success' : 'bg-destructive')
-						: i === game.currentRound
-							? 'bg-foreground'
-							: 'bg-border'}"
-			></div>
-		{/each}
-	</div>
+	<ProgressDots />
 
 	<div class="flex flex-col items-center gap-8 w-full">
 			<!-- Play button -->
 			<div class="flex flex-col items-center gap-3">
 				<button
-					onclick={play}
-					disabled={isPlaying || isLoading || answered}
+					onclick={ctrl.play}
+					disabled={ctrl.isPlaying || ctrl.isLoading || answered}
 					class="size-20 rounded-full border-2 flex items-center justify-center transition-all
-						{isPlaying
+						{ctrl.isPlaying
 							? 'border-primary bg-primary text-primary-foreground'
 							: 'border-border bg-background hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed'}"
 				>
 					<Volume2 class="size-8" />
 				</button>
 				<span class="text-xs text-muted-foreground">
-					{isLoading ? 'Loading…' : isPlaying ? 'Playing…' : 'Tap to replay'}
+					{ctrl.isLoading ? 'Loading…' : ctrl.isPlaying ? 'Playing…' : 'Tap to replay'}
 				</span>
 			</div>
 
@@ -133,7 +84,7 @@
 								name={interval.name}
 								state={getState(String(interval.semitones))}
 								{answered}
-								onclick={() => selectAnswer(String(interval.semitones))}
+								onclick={() => ctrl.selectAnswer(String(interval.semitones))}
 							/>
 						{/each}
 					</div>
@@ -150,7 +101,7 @@
 								name={chord.name}
 								state={getState(chord.id)}
 								{answered}
-								onclick={() => selectAnswer(chord.id)}
+								onclick={() => ctrl.selectAnswer(chord.id)}
 							/>
 						{/each}
 					</div>
@@ -167,7 +118,7 @@
 								name={chord.name}
 								state={getState(chord.id)}
 								{answered}
-								onclick={() => selectAnswer(chord.id)}
+								onclick={() => ctrl.selectAnswer(chord.id)}
 							/>
 						{/each}
 					</div>
@@ -183,7 +134,7 @@
 								name={chord.name}
 								state={getState(chord.id)}
 								{answered}
-								onclick={() => selectAnswer(chord.id)}
+								onclick={() => ctrl.selectAnswer(chord.id)}
 							/>
 						{/each}
 					</div>

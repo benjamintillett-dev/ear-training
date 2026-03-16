@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { onMount, onDestroy } from 'svelte';
-	import { game } from '$lib/game.svelte.js';
-	import { playInterval, preloadSampler, stopAll } from '$lib/audio.js';
+	import { game, ALL_INTERVALS } from '$lib/game.svelte.js';
+	import { playInterval } from '$lib/audio.js';
+	import { createPlayController } from '$lib/play-controller.svelte.js';
 	import { Volume2, ArrowUp, ArrowDown } from 'lucide-svelte';
 	import AnswerButton from '$lib/components/AnswerButton.svelte';
 	import HomeButton from '$lib/components/HomeButton.svelte';
+	import StatsDrawer from '$lib/components/StatsDrawer.svelte';
+	import ProgressDots from '$lib/components/ProgressDots.svelte';
 
 	$effect(() => {
 		if (game.phase === 'config') goto('/');
@@ -14,48 +16,12 @@
 	const round = $derived(game.rounds[game.currentRound]);
 	const answered = $derived(round != null && round.answer !== null);
 
-	let isPlaying = $state(false);
-	let isLoading = $state(true);
-	let playId = 0;
-	let destroyed = false;
-	let timers: ReturnType<typeof setTimeout>[] = [];
-
-	function delay(ms: number): Promise<void> {
-		return new Promise((r) => { timers.push(setTimeout(r, ms)); });
-	}
-
-	async function play() {
-		if (!round || round.question.type !== 'interval' || destroyed) return;
-		const id = ++playId;
-		isPlaying = true;
-		await playInterval(round.question.interval.semitones, round.direction);
-		await new Promise<void>((r) => { timers.push(setTimeout(r, 1800)); });
-		if (playId === id && !destroyed) isPlaying = false;
-	}
-
-	onMount(async () => {
-		await preloadSampler();
-		isLoading = false;
-		play();
+	const ctrl = createPlayController({
+		playFn: async () => {
+			if (!round || round.question.type !== 'interval') return;
+			await playInterval(round.question.interval.semitones, round.direction);
+		},
 	});
-
-	onDestroy(() => {
-		destroyed = true;
-		stopAll();
-		timers.forEach(clearTimeout);
-	});
-
-	async function selectAnswer(semitones: number) {
-		if (answered || destroyed) return;
-		game.submitAnswer(String(semitones));
-
-		await delay(600);
-		if (destroyed) return;
-
-		game.nextRound();
-		if (game.phase === 'results') goto('/results');
-		else { stopAll(); play(); }
-	}
 
 	function getState(semitones: number): 'correct' | 'wrong' | 'neutral' {
 		if (!answered) return 'neutral';
@@ -70,23 +36,14 @@
 </script>
 
 <HomeButton href="/" />
+<StatsDrawer
+	items={ALL_INTERVALS.map((i) => ({ key: String(i.semitones), name: i.name, shortName: i.shortName }))}
+	modes={['interval']}
+/>
 
 <div class="flex min-h-dvh flex-col items-center justify-center gap-8 p-6">
 
-	<!-- Progress dots -->
-	<div class="flex gap-2">
-		{#each Array(10) as _, i}
-			{@const r = game.rounds[i]}
-			<div
-				class="size-2 rounded-full transition-colors duration-300
-					{i < game.currentRound
-						? (r?.correct ? 'bg-success' : 'bg-destructive')
-						: i === game.currentRound
-							? 'bg-foreground'
-							: 'bg-border'}"
-			></div>
-		{/each}
-	</div>
+	<ProgressDots />
 
 	<div class="flex flex-col items-center gap-8 w-full">
 			<!-- Play button -->
@@ -102,10 +59,10 @@
 				</div>
 
 				<button
-					onclick={play}
-					disabled={isPlaying || isLoading || answered}
+					onclick={ctrl.play}
+					disabled={ctrl.isPlaying || ctrl.isLoading || answered}
 					class="size-20 rounded-full border-2 flex items-center justify-center transition-all
-						{isPlaying
+						{ctrl.isPlaying
 							? 'border-primary bg-primary text-primary-foreground'
 							: 'border-border bg-background hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed'}"
 				>
@@ -113,7 +70,7 @@
 				</button>
 
 				<span class="text-xs text-muted-foreground">
-					{isLoading ? 'Loading…' : isPlaying ? 'Playing…' : 'Tap to replay'}
+					{ctrl.isLoading ? 'Loading…' : ctrl.isPlaying ? 'Playing…' : 'Tap to replay'}
 				</span>
 			</div>
 
@@ -125,7 +82,7 @@
 						name={interval.name}
 						state={getState(interval.semitones)}
 						{answered}
-						onclick={() => selectAnswer(interval.semitones)}
+						onclick={() => ctrl.selectAnswer(String(interval.semitones))}
 					/>
 				{/each}
 			</div>

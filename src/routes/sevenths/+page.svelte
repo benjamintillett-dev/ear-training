@@ -6,6 +6,7 @@
 	import { Play } from 'lucide-svelte';
 	import HomeButton from '$lib/components/HomeButton.svelte';
 	import ToggleGrid from '$lib/components/ToggleGrid.svelte';
+	import StatsDrawer from '$lib/components/StatsDrawer.svelte';
 
 	onMount(() => {
 		game.setConfig({ intervals: [], triads: [] });
@@ -16,12 +17,16 @@
 	);
 
 	function start() {
-		game.startGame('harmony');
+		game.startGame('harmony', '/sevenths');
 		goto('/harmony/play');
 	}
 </script>
 
 <HomeButton href="/" />
+<StatsDrawer
+	items={[...ALL_SEVENTH_CHORDS, ...ALL_SHELL_SEVENTH_CHORDS].map((c) => ({ key: c.id, name: c.name, shortName: c.shortName }))}
+	modes={['harmony']}
+/>
 
 <div class="flex min-h-dvh flex-col items-center justify-center gap-8 p-6">
 

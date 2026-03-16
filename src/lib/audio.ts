@@ -132,6 +132,18 @@ export async function playTriad(semitones: number[]) {
 	});
 }
 
+export async function playScaleDegree(semitones: number) {
+	const { inst, ctx } = await getInstrument();
+	const now = ctx.currentTime;
+	// C major chord to establish the key
+	[0, 4, 7].forEach((offset, i) => {
+		inst.start({ note: midiNote(offset), duration: 1.5, time: now + i * HARMONIC_STAGGER });
+	});
+	// Target note after chord
+	inst.start({ note: midiNote(semitones), duration: 2, time: now + 1.5 });
+	return new Promise<void>((r) => setTimeout(r, 3700));
+}
+
 export function stopAll() {
 	instrument?.stop();
 }

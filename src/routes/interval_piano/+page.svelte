@@ -4,6 +4,7 @@
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { ArrowUp, ArrowDown, ArrowUpDown, Play } from 'lucide-svelte';
 	import HomeButton from '$lib/components/HomeButton.svelte';
+	import StatsDrawer from '$lib/components/StatsDrawer.svelte';
 
 	const directions: { value: Direction; label: string; icon: typeof ArrowUp }[] = [
 		{ value: 'up', label: 'Ascending', icon: ArrowUp },
@@ -38,12 +39,16 @@
 	}
 
 	function start() {
-		game.startGame('interval_piano');
+		game.startGame('interval_piano', '/interval_piano');
 		goto('/interval_piano/play');
 	}
 </script>
 
 <HomeButton href="/" />
+<StatsDrawer
+	items={ALL_INTERVALS.map((i) => ({ key: String(i.semitones), name: i.name, shortName: i.shortName }))}
+	modes={['interval_piano']}
+/>
 
 <div class="flex min-h-dvh flex-col items-center justify-center gap-8 p-6">
 

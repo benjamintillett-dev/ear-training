@@ -5,8 +5,11 @@
 	import { fade } from 'svelte/transition';
 	import { onMount } from 'svelte';
 	import SoundDrawer from '$lib/components/SoundDrawer.svelte';
+	import { initTracker } from '$lib/analytics/tracker.svelte.js';
 
 	let { children } = $props();
+
+	initTracker();
 
 	onMount(() => {
 		if (!/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) return;
