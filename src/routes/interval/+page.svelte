@@ -5,6 +5,7 @@
 	import { ArrowUp, ArrowDown, ArrowUpDown, Play } from 'lucide-svelte';
 	import HomeButton from '$lib/components/HomeButton.svelte';
 	import ToggleGrid from '$lib/components/ToggleGrid.svelte';
+	import StatsDrawer from '$lib/components/StatsDrawer.svelte';
 
 	const directions: { value: Direction; label: string; icon: typeof ArrowUp }[] = [
 		{ value: 'up', label: 'Ascending', icon: ArrowUp },
@@ -15,12 +16,16 @@
 	const canStart = $derived(game.config.intervals.length >= 2);
 
 	function start() {
-		game.startGame('interval');
+		game.startGame('interval', '/interval');
 		goto('/interval/play');
 	}
 </script>
 
 <HomeButton href="/" />
+<StatsDrawer
+	items={ALL_INTERVALS.map((i) => ({ key: String(i.semitones), name: i.name, shortName: i.shortName }))}
+	modes={['interval']}
+/>
 
 <div class="flex min-h-dvh flex-col items-center justify-center gap-8 p-6">
 

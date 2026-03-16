@@ -35,6 +35,24 @@ export const ALL_SEVENTH_CHORDS: Chord[] = [
 	{ id: 'minor7',    semitones: chordSemitones('minor seventh'),    name: 'Minor 7',    shortName: 'Min7' },
 ];
 
+export interface ScaleDegree {
+	degree: number;      // 1–8
+	semitones: number;   // offset from C4: 0,2,4,5,7,9,11,12
+	name: string;        // "Root", "2nd", etc.
+	shortName: string;   // "1"–"8"
+}
+
+export const SCALE_DEGREES: ScaleDegree[] = [
+	{ degree: 1, semitones: 0,  name: 'Root',   shortName: '1' },
+	{ degree: 2, semitones: 2,  name: '2nd',    shortName: '2' },
+	{ degree: 3, semitones: 4,  name: '3rd',    shortName: '3' },
+	{ degree: 4, semitones: 5,  name: '4th',    shortName: '4' },
+	{ degree: 5, semitones: 7,  name: '5th',    shortName: '5' },
+	{ degree: 6, semitones: 9,  name: '6th',    shortName: '6' },
+	{ degree: 7, semitones: 11, name: '7th',    shortName: '7' },
+	{ degree: 8, semitones: 12, name: 'Octave', shortName: '8' },
+];
+
 // Shell voicings: root + 3rd + 7th (no 5th) — not in tonal, kept manual
 export const ALL_SHELL_SEVENTH_CHORDS: Chord[] = [
 	{ id: 'shell_major7',    semitones: [0, 4, 11], name: 'Major 7 Shell',    shortName: 'Maj7s' },

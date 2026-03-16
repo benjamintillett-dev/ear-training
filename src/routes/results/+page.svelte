@@ -13,13 +13,7 @@
 	const score = $derived(game.getScore());
 	const mode = $derived(game.config.mode);
 
-	const settingsPath = $derived(
-		mode === 'interval' ? '/interval'
-		: mode === 'interval_piano' ? '/interval_piano'
-		: game.config.triads.length > 0 ? '/triads'
-		: game.config.seventhChords.length > 0 || game.config.shellSeventhChords.length > 0 ? '/sevenths'
-		: '/dyads'
-	);
+	const settingsPath = $derived(game.config.settingsPath);
 
 	function getMessage(s: number) {
 		if (s === 10) return 'Perfect!';
@@ -43,8 +37,8 @@
 
 	<div class="flex flex-col gap-3 w-full max-w-sm">
 		<Button class="w-full" size="lg" onclick={() => {
-			game.startGame(mode);
-			goto(mode === 'harmony' ? '/harmony/play' : mode === 'interval_piano' ? '/interval_piano/play' : '/interval/play');
+			game.startGame(mode, settingsPath);
+			goto(mode === 'harmony' ? '/harmony/play' : mode === 'scale_degree' ? '/scale_degree/play' : mode === 'interval_piano' ? '/interval_piano/play' : '/interval/play');
 		}}>
 			<RotateCcw class="size-4" />
 			Try Again

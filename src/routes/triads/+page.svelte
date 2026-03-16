@@ -6,6 +6,7 @@
 	import { Play } from 'lucide-svelte';
 	import HomeButton from '$lib/components/HomeButton.svelte';
 	import ToggleGrid from '$lib/components/ToggleGrid.svelte';
+	import StatsDrawer from '$lib/components/StatsDrawer.svelte';
 
 	onMount(() => {
 		game.setConfig({ intervals: [], seventhChords: [], shellSeventhChords: [] });
@@ -14,12 +15,16 @@
 	const canStart = $derived(game.config.triads.length >= 2);
 
 	function start() {
-		game.startGame('harmony');
+		game.startGame('harmony', '/triads');
 		goto('/harmony/play');
 	}
 </script>
 
 <HomeButton href="/" />
+<StatsDrawer
+	items={ALL_TRIADS.map((t) => ({ key: t.id, name: t.name, shortName: t.shortName }))}
+	modes={['harmony']}
+/>
 
 <div class="flex min-h-dvh flex-col items-center justify-center gap-8 p-6">
 
